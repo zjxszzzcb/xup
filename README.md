@@ -9,8 +9,7 @@
 <p align="center">
   <a href="#installation">Installation</a> •
   <a href="#quick-start">Quick Start</a> •
-  <a href="#usage">Usage</a> •
-  <a href="#documentation">Docs</a>
+  <a href="#usage">Usage</a>
 </p>
 
 ---
@@ -22,6 +21,7 @@ Most setup tools managers try to do too much — templating engines, secret mana
 - **Zero config** — just a `setup.toml` per tool
 - **File copies** — no symlinks, no magic, just plain files where you want them
 - **Safe by default** — won't overwrite existing files unless you say `-f`
+- **Zero dependencies** — pure Python 3.11+ (stdlib only)
 
 ## Prerequisites
 
@@ -42,110 +42,77 @@ uv tool install xup
 
 ## Quick Start
 
-1. **Clone your dotfiles repo** (or create a new one):
+1. **Clone your dotfiles repo**:
 
    ```bash
-   xup repo add git@github.com:you/dotfiles.git
+   xup repo add dotfiles git@github.com:you/dotfiles.git
    ```
 
-   Or set up manually:
-
-   ```bash
-   mkdir -p ~/.xup
-   git init ~/.xup
-   ```
-
-2. **Add a tool** — for example, VSCode:
-
-   ```bash
-   mkdir -p ~/.xup/repo/origin/vscode/.xup
-   ```
-
-   Create `~/.xup/repo/origin/vscode/.xup/setup.toml`:
-
-   ```toml
-   [copy_to]
-   "settings.json" = "~/.config/Code/User/settings.json"
-   ```
-
-   Place the actual `settings.json` next to the setup file:
-
-   ```bash
-   touch ~/.xup/repo/origin/vscode/settings.json
-   ```
-
-3. **Copy it into place**:
+2. **Copy a tool into place**:
 
    ```bash
    xup vscode
    ```
 
-   Done! `~/.config/Code/User/settings.json` is now a plain file copied from `~/.xup/repo/origin/vscode/settings.json`.
-
-   Or use a different namespace:
-
-   ```bash
-   xup zzzcb/vscode
-   ```
+   Done! Files declared in the tool's `setup.toml` are copied to their destinations.
 
 ## Usage
 
 ```
-Usage: xup [OPTIONS] COMMAND [ARGS]...
+usage: xup [-h] [--sync] [-f] arg0
 
-  Setup tool
+Minimal setup-tools manager
 
-  xup <tool>              Copy tool files into place
-  xup <tool> -f           Force overwrite existing files
+positional arguments:
+  arg0           tool name (or 'repo')
 
-Options:
-  -v, --version  Show the version and exit.
-  -h, --help     Show this message and exit.
-
-Commands:
-  repo  Manage the xup repository
+options:
+  --sync         pull deployed files back to repo
+  -f, --force    overwrite existing files (creates .xup-backup)
+  -h, --help     show this help message and exit
 ```
 
 ### `xup <tool>`
 
-Reads `~/.xup/repo/<namespace>/<tool>/.xup/setup.toml` and copies the declared files into place.
+Reads `~/.xup/repos/<repo>/<tool>/.xup/setup.toml` and copies the declared files into place.
 
 ```bash
-# Copy a single tool
+# Copy a single tool (from default repo "main")
 xup nvim
 
 # Force overwrite (backs up existing files to *.xup-backup)
 xup nvim -f
+
+# Specify a repo explicitly
+xup dotfiles/nvim
+```
+
+### `xup <tool> --sync`
+
+Reverse operation — pull deployed files back into the repo.
+
+```bash
+xup nvim --sync
 ```
 
 ### `xup repo`
 
-Manage the xup repository.
+Manage repos (each repo is a git clone under `~/.xup/repos/`).
 
 ```bash
-# Clone a dotfiles repo (or add remote if already initialized)
-xup repo add git@github.com:you/dotfiles.git
+# Clone a dotfiles repo
+xup repo add dotfiles git@github.com:you/dotfiles.git
 
-# List remotes
-xup repo list
+# List all repos and their tools
+xup repo ls
 
-# Change remote URL
-xup repo set-url git@github.com:you/dotfiles.git
-xup repo set-url upstream git@github.com:upstream/dotfiles.git
-
-# Rename or remove remotes
-xup repo rename origin upstream
-xup repo remove upstream
+# Remove a repo
+xup repo rm dotfiles
 ```
-
-## Documentation
-
-- **[setup.toml Guide](docs/setup-guide.md)** — `[copy_to]` syntax, file/directory copy, backup behavior
-- **[Repository Layout](docs/repo-layout.md)** — repo directory structure, Git remote URL formats, full example
 
 ## Manifest Format
 
-Each tool lives in a folder under `repo/<namespace>/` and contains a `.xup/setup.toml`:
+Each tool lives in a folder inside a repo and contains a `.xup/setup.toml`:
 
 ```toml
 [copy_to]
@@ -154,22 +121,17 @@ Each tool lives in a folder under `repo/<namespace>/` and contains a `.xup/setup
 "config/alacritty" = "~/.config/alacritty"
 ```
 
-| Key      | Description                                            |
-|----------|--------------------------------------------------------|
-| `copy_to` | Map of **source** (relative to `repo/<namespace>/<tool>/`) → **destination** (supports `~`) |
-
-See the [setup.toml Guide](docs/setup-guide.md) for details.
+| Key       | Description                                                        |
+|-----------|--------------------------------------------------------------------|
+| `copy_to` | Map of **source** (relative to tool dir) → **destination** (supports `~`) |
 
 ## Repository Layout
 
 ```
-repo-root/
-└── repo/
-    ├── origin/
-    │   ├── git/
-    │   │   ├── .xup/
-    │   │   │   └── setup.toml
-    │   │   └── gitconfig
+~/.xup/
+└── repos/
+    ├── dotfiles/              # A cloned git repo
+    │   ├── .git/
     │   ├── nvim/
     │   │   ├── .xup/
     │   │   │   └── setup.toml
@@ -180,36 +142,21 @@ repo-root/
     │       ├── .xup/
     │       │   └── setup.toml
     │       └── settings.json
-    └── zzzcb/
+    └── work/                  # Another repo
         └── vscode/
             ├── .xup/
             │   └── setup.toml
             └── settings.json
-└── .git/
 ```
-
-See [Repository Layout](docs/repo-layout.md) for details.
 
 ## Source Structure
 
 ```
 src/xup/
-├── cli.py              # Entry point — FallbackGroup + command registration
-├── commands/
-│   ├── copy.py         # xup <tool> (default command)
-│   └── repo/
-│       ├── __init__.py # repo subgroup registration
-│       ├── add.py      # Clone or add remote
-│       ├── list.py
-│       ├── remove.py
-│       ├── rename.py
-│       └── set_url.py
-└── utils/
-    ├── __init__.py     # Re-exports
-    ├── copy.py         # File copy with backup logic (pure function)
-    ├── path.py         # Path expansion helpers
-    ├── repo.py         # get_repo_dir(), get_tools_root(), tool_dir()
-    └── git.py          # Git remote helpers, ensure_git_repo()
+├── cli.py        # Entry point — argparse CLI
+├── const.py      # Path helpers (functions for testability)
+├── repo.py       # XupRepoManager, copy/sync logic, repo CRUD
+└── utils.py      # expand(), git_clone(), parse_remote_ref()
 ```
 
 ## Development
@@ -222,8 +169,8 @@ uv pip install -e ".[dev]"
 # Run tests
 uv run pytest
 
-# Run locally
-python -m xup.cli -h
+# Run with coverage
+uv run pytest --cov=src/xup --cov-report=term-missing
 
 # Build
 uv build

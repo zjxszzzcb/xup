@@ -19,10 +19,13 @@ python -m xup.cli -h
 uv run pytest
 
 # Run a single test file
-uv run pytest tests/test_install.py
+uv run pytest tests/test_copy.py
 
 # Run a specific test
-uv run pytest tests/test_install.py::test_copy_file -v
+uv run pytest tests/test_copy.py::TestApplyToolSettings::test_copies_file -v
+
+# Run with coverage
+uv run pytest --cov=src/xup --cov-report=term-missing
 
 # Build
 uv build
@@ -34,30 +37,47 @@ uv tool install .
 ## Architecture
 
 ### Entry Point
-`src/xup/cli.py` — Click app with `FallbackGroup` that routes `xup <tool>` to the hidden `_copy` command. Known subcommands (`pull`, `push`, `diff`, `commit`, `remote`) work normally.
+`src/xup/cli.py` — argparse CLI. `main(args)` parses top-level arguments and dispatches:
+- `xup <tool>` → `XupRepoManager.apply_tool_settings()`
+- `xup <tool> --sync` → `XupRepoManager.sync_tool_settings()`
+- `xup repo {add|rm|ls}` → repo management
 
-### Core Flow
-1. **Copy** (`utils/copy.py`) — `apply(tool, force)` loads `setup.toml` via `tomllib`, copies files/dirs to destinations; returns `list[CopyResult]`. Backs up existing files with `.xup-backup` suffix when `force=True`.
-2. **Repo** (`utils/repo.py`) — `get_repo_dir()` returns `~/.xup`, `get_tools_root()` returns `~/.xup/repo`. `tool_dir(tool)` resolves to namespace-prefixed path. Functions (not constants) for testability.
+### Source Structure
+```
+src/xup/
+├── __init__.py
+├── cli.py        # CLI entry point (argparse)
+├── const.py      # Path helpers: get_xup_home(), get_xup_repos_dir()
+├── repo.py       # XupRepoManager, CopyElem, SetupConfig, repo CRUD
+└── utils.py      # expand(), git_clone(), parse_remote_ref()
+```
 
-### Commands (`src/xup/commands/`)
-- `install` — Default command: copies tool files; `--sync` to git pull first, `--all` to copy all tools, `--force` to overwrite
-- `pull` / `push` — Git wrappers with `remote@branch` syntax support
-- `diff` / `commit` — Git convenience wrappers
-- `remote/` — Subcommands: `add`, `list`, `remove`, `rename`, `set-url`
+### Core Module Details
 
-### Utilities (`src/xup/utils/`)
-- `path.py` — `expand()` for `~` expansion
-- `git.py` — `ensure_git_repo()`, remote resolution, `remote@branch` parsing
-- `copy.py` — Pure function `apply()` returns `CopyResult`, no I/O side effects
-- `repo.py` — Path functions and resolution
+- **`const.py`** — Functions (not constants) for testability. `get_xup_home()` checks `XUP_HOME` env var first, falls back to `Path.home() / ".xup"`.
+- **`utils.py`** — Low-level helpers: `expand()` for `~` expansion, `git_clone()` with `check=True`, `parse_remote_ref()` for `remote@branch` syntax.
+- **`repo.py`** — Core domain: `XupRepoManager` handles tool manifest loading, copy/sync operations, backup logic. Free functions: `add_repo()`, `remove_repo()`, `get_repo_and_tools()`, `resolve_tool_arg()`.
+- **`cli.py`** — Thin CLI layer. `main(args)` accepts optional `args` list for testability. `_manage_repo(args)` handles `xup repo` subcommands.
 
 ### Repository Layout
 ```
 ~/.xup/
-├── repo/<namespace>/<tool>/.xup/setup.toml   # Manifest
-├── repo/<namespace>/<tool>/<source_files>     # Dotfile sources
-└── .git/                                       # Optional git repo
+└── repos/
+    ├── dotfiles/          # A cloned git repo (= one "repo")
+    │   ├── .git/
+    │   ├── nvim/
+    │   │   ├── .xup/
+    │   │   │   └── setup.toml
+    │   │   └── init.lua
+    │   └── vscode/
+    │       ├── .xup/
+    │       │   └── setup.toml
+    │       └── settings.json
+    └── work/              # Another repo
+        └── git/
+            ├── .xup/
+            │   └── setup.toml
+            └── gitconfig
 ```
 
 ### Manifest Format (`setup.toml`)
@@ -68,10 +88,11 @@ uv tool install .
 
 ## Key Design Constraints
 - Python 3.11+ (uses `tomllib` from stdlib)
-- Only runtime dependency: `click>=8.0`
-- Safety first: refuses overwrite without `-f`, creates `.xup-backup` files
-- Namespaces allow multiple dotfile collections (default: `origin`)
-- Utils layer is pure: no print/logging, only exceptions and return values
+- Zero runtime dependencies (stdlib + argparse only)
+- Safety first: refuses overwrite without confirmation
+- Default namespace is `main` — `xup vscode` resolves to `repos/main/vscode`
+- Path helpers are functions for testability (not module-level constants)
+- Dataclasses use `frozen=True` for immutability
 
 ## Testing
-Tests use pytest with real filesystem operations in temp directories. `conftest.py` provides `xup_home` fixture that monkeypatches `Path.home()`. Since `get_repo_dir()` calls `Path.home()` at runtime (not import time), the fixture provides full isolation without per-module patching. Git tests use actual `git` commands, not mocks.
+Tests use pytest with real filesystem operations in temp directories. `conftest.py` provides `xup_home` fixture that sets `XUP_HOME` and `HOME` env vars for full isolation. The `main()` function accepts an optional `args` parameter, allowing direct invocation in tests without monkeypatching `sys.argv`.
