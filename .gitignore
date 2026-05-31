@@ -1,8 +1,15 @@
-.idea
-.vscode
+# IDE
+.idea/
+.vscode/
 
-.venv
-.pytest_cache
-__pycache__
+# Python
+.venv/
+.pytest_cache/
+__pycache__/
+dist/
 
+# Dependencies
 vendor/
+
+# Secrets
+.env
