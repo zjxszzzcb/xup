@@ -7,19 +7,25 @@ from xup.utils import ensure_repo, get_repo_dir
 
 
 @click.command()
-@click.argument("name")
 @click.argument("url")
-def cmd_remote_add(name, url):
-    """Add a git remote to ~/.xup."""
+@click.option("-n", "--name", default="origin", help="Remote name (default: origin)")
+def cmd_repo_add(url, name):
+    """Add a remote or clone if repo does not exist."""
     ensure_repo()
     repo_dir = get_repo_dir()
 
     if not (repo_dir / ".git").exists():
+        click.secho(f"Cloning {url} into {repo_dir}...", fg="cyan")
         try:
-            subprocess.run(["git", "init"], cwd=str(repo_dir), check=True)
+            subprocess.run(
+                ["git", "clone", url, "-o", name, str(repo_dir)],
+                check=True,
+            )
         except subprocess.CalledProcessError as e:
-            click.secho(f"Error: git init failed: {e}", fg="red", err=True)
+            click.secho(f"Error: git clone failed: {e}", fg="red", err=True)
             sys.exit(1)
+        click.secho(f"Cloned and set remote '{name}' -> {url}", fg="green")
+        return
 
     try:
         subprocess.run(

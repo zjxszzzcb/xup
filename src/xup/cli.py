@@ -1,7 +1,7 @@
 import click
 
 from xup.commands.copy import cmd_copy
-from xup.commands.remote import remote
+from xup.commands.repo import repo
 
 
 class FallbackGroup(click.Group):
@@ -36,7 +36,7 @@ def app():
 
 
 app.add_command(cmd_copy, "_copy")
-app.add_command(remote, "remote")
+app.add_command(repo, "repo")
 
 
 def main() -> None:

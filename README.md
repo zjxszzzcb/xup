@@ -26,7 +26,7 @@ Most setup tools managers try to do too much — templating engines, secret mana
 ## Prerequisites
 
 - **Python** >= 3.11
-- **Git** (for sync and remote commands)
+- **Git** (for `repo` commands)
 
 ## Installation
 
@@ -42,7 +42,13 @@ uv tool install xup
 
 ## Quick Start
 
-1. **Create your dotfiles repo** (or clone an existing one into `~/.xup`):
+1. **Clone your dotfiles repo** (or create a new one):
+
+   ```bash
+   xup repo add git@github.com:you/dotfiles.git
+   ```
+
+   Or set up manually:
 
    ```bash
    mkdir -p ~/.xup
@@ -87,22 +93,17 @@ uv tool install xup
 ```
 Usage: xup [OPTIONS] COMMAND [ARGS]...
 
-  A config management and sync tool.
+  Setup tool
 
-  Usage:
-    xup <tool>              Copy tool files into place
-    xup <tool> -f           Force overwrite existing files
+  xup <tool>              Copy tool files into place
+  xup <tool> -f           Force overwrite existing files
 
 Options:
   -v, --version  Show the version and exit.
   -h, --help     Show this message and exit.
 
 Commands:
-  commit  Stage all changes in ~/.xup and commit.
-  diff    Show changes in ~/.xup (git diff wrapper).
-  pull    Pull latest changes from a remote.
-  push    Push local changes to a remote.
-  remote  Manage git remotes for ~/.xup.
+  repo  Manage the xup repository
 ```
 
 ### `xup <tool>`
@@ -117,64 +118,24 @@ xup nvim
 xup nvim -f
 ```
 
-### `xup pull [remote]`
+### `xup repo`
 
-Pull the latest changes from a Git remote.
-
-```bash
-# With a single remote configured, the name is optional
-xup pull
-
-# Pull a specific branch using remote@branch syntax
-xup pull origin@test
-
-# With multiple remotes, specify the name
-xup pull origin
-```
-
-### `xup push [remote]`
-
-Push local changes to a Git remote.
+Manage the xup repository.
 
 ```bash
-# With a single remote configured, the name is optional
-xup push
+# Clone a dotfiles repo (or add remote if already initialized)
+xup repo add git@github.com:you/dotfiles.git
 
-# Push current branch to a specific remote branch
-xup push origin@test
+# List remotes
+xup repo list
 
-# Force push
-xup push origin@test -f
-```
+# Change remote URL
+xup repo set-url git@github.com:you/dotfiles.git
+xup repo set-url upstream git@github.com:upstream/dotfiles.git
 
-### `xup diff [args...]`
-
-Show pending changes in `~/.xup`. Extra arguments are forwarded to `git diff`.
-
-```bash
-xup diff
-xup diff --stat
-xup diff init.vim
-```
-
-### `xup commit -m <message>`
-
-Stage all changes in `~/.xup` (`git add -A`) and commit in one step.
-
-```bash
-xup commit -m "update nvim config"
-```
-
-### `xup remote`
-
-Manage git remotes without leaving the CLI.
-
-```bash
-xup remote add origin git@github.com:you/dotfiles.git
-xup remote set-url git@github.com:you/dotfiles.git
-xup remote set-url upstream git@github.com:upstream/dotfiles.git
-xup remote rename origin upstream
-xup remote remove upstream
+# Rename or remove remotes
+xup repo rename origin upstream
+xup repo remove upstream
 ```
 
 ## Documentation
@@ -235,14 +196,10 @@ See [Repository Layout](docs/repo-layout.md) for details.
 src/xup/
 ├── cli.py              # Entry point — FallbackGroup + command registration
 ├── commands/
-│   ├── install.py      # xup <tool> (copy + optional sync)
-│   ├── pull.py         # xup pull
-│   ├── push.py         # xup push
-│   ├── diff.py         # xup diff
-│   ├── commit.py       # xup commit
-│   └── remote/
-│       ├── __init__.py # remote subgroup registration
-│       ├── add.py
+│   ├── copy.py         # xup <tool> (default command)
+│   └── repo/
+│       ├── __init__.py # repo subgroup registration
+│       ├── add.py      # Clone or add remote
 │       ├── list.py
 │       ├── remove.py
 │       ├── rename.py

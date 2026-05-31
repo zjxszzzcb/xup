@@ -7,7 +7,7 @@ from xup.utils import ensure_git_repo, get_repo_dir
 
 
 @click.command("list")
-def cmd_remote_list():
+def cmd_repo_list():
     """List git remotes for ~/.xup (like git remote -v)."""
     ensure_git_repo()
 

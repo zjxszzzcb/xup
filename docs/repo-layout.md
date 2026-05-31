@@ -1,6 +1,6 @@
 # Repository Layout
 
-xup reads the repository from `~/.xup` at runtime. You can create this directory manually, clone a Git repository into it, or use `xup remote add`.
+xup reads the repository from `~/.xup` at runtime. You can create this directory manually, clone a Git repository into it, or use `xup repo add`.
 
 ## Directory Structure
 
@@ -61,18 +61,18 @@ vscode/
 
 ### Git Repository (Optional)
 
-To use `xup remote`, `~/.xup` must be a Git repository:
+To use `xup repo`, `~/.xup` must be a Git repository:
+
+```bash
+xup repo add git@github.com:you/dotfiles.git
+```
+
+Or set up manually:
 
 ```bash
 cd ~/.xup
 git init
 git remote add origin <your-dotfiles-repo>
-```
-
-Or use the built-in remote command:
-
-```bash
-xup remote add origin git@github.com:you/dotfiles.git
 ```
 
 ## Full Example
@@ -128,12 +128,12 @@ repo-root/
 
 ## Remote URL Formats
 
-`xup remote add` accepts any URL that Git understands:
+`xup repo add` accepts any URL that Git understands:
 
 - SSH: `git@github.com:you/dotfiles.git`
 - HTTPS: `https://github.com/you/dotfiles.git`
 - Local path: `~/projects/dotfiles`
 
 ```bash
-xup remote add origin git@github.com:you/dotfiles.git
+xup repo add git@github.com:you/dotfiles.git
 ```

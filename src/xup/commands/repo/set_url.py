@@ -9,7 +9,7 @@ from xup.utils import ensure_git_repo, get_repo_dir
 @click.command("set-url")
 @click.argument("name_or_url")
 @click.argument("url", required=False)
-def cmd_remote_set_url(name_or_url, url):
+def cmd_repo_set_url(name_or_url, url):
     """Set the URL of a git remote for ~/.xup."""
     ensure_git_repo()
 

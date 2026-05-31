@@ -9,7 +9,7 @@ from xup.utils import ensure_git_repo, get_repo_dir
 @click.command()
 @click.argument("old")
 @click.argument("new")
-def cmd_remote_rename(old, new):
+def cmd_repo_rename(old, new):
     """Rename a git remote in ~/.xup."""
     ensure_git_repo()
 

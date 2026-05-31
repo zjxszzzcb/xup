@@ -8,7 +8,7 @@ from xup.utils import ensure_git_repo, get_repo_dir
 
 @click.command()
 @click.argument("name")
-def cmd_remote_remove(name):
+def cmd_repo_remove(name):
     """Remove a git remote from ~/.xup."""
     ensure_git_repo()
 
