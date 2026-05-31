@@ -8,7 +8,7 @@ runner = CliRunner()
 def test_repo_add_clone(xup_home):
     with patch("xup.commands.repo.add.subprocess.run") as mock_run:
         mock_run.return_value = None
-        result = runner.invoke(app, ["repo", "add", "git@github.com:u/r.git"])
+        result = runner.invoke(app, ["repo", "add", "main", "git@github.com:u/r.git"])
         assert result.exit_code == 0
         assert "Cloning" in result.output
 
@@ -17,9 +17,9 @@ def test_repo_add_remote(xup_home):
     (xup_home / ".git").mkdir()
     with patch("xup.commands.repo.add.subprocess.run") as mock_run:
         mock_run.return_value = None
-        result = runner.invoke(app, ["repo", "add", "git@github.com:u/r.git"])
+        result = runner.invoke(app, ["repo", "add", "main", "git@github.com:u/r.git"])
         assert result.exit_code == 0
-        assert "Added remote 'origin'" in result.output
+        assert "Added remote 'main'" in result.output
 
 
 def test_repo_set_url_one_arg(xup_home):
@@ -28,7 +28,7 @@ def test_repo_set_url_one_arg(xup_home):
         mock_run.return_value = None
         result = runner.invoke(app, ["repo", "set-url", "git@github.com:u/r.git"])
         assert result.exit_code == 0
-        assert "Set remote 'origin'" in result.output
+        assert "Set remote 'main'" in result.output
 
 
 def test_repo_set_url_two_args(xup_home):

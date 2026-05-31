@@ -6,7 +6,7 @@ from conftest import _make_tool
 
 def test_apply_copies_file(xup_home):
     _make_tool(xup_home, "vscode", '[copy_to]\n"settings.json" = "~/dest/settings.json"\n')
-    (xup_home / "repo" / "origin" / "vscode" / "settings.json").write_text("{}")
+    (xup_home / "repo" / "main" / "vscode" / "settings.json").write_text("{}")
 
     results = apply("vscode")
     assert len(results) == 1
@@ -28,7 +28,7 @@ def test_apply_raises_on_missing_manifest(xup_home):
 
 def test_apply_refuses_overwrite(xup_home):
     _make_tool(xup_home, "vscode", '[copy_to]\n"settings.json" = "~/dest/settings.json"\n')
-    (xup_home / "repo" / "origin" / "vscode" / "settings.json").write_text("{}")
+    (xup_home / "repo" / "main" / "vscode" / "settings.json").write_text("{}")
     dest = Path.home() / "dest" / "settings.json"
     dest.parent.mkdir(parents=True)
     dest.write_text("old")
@@ -39,7 +39,7 @@ def test_apply_refuses_overwrite(xup_home):
 
 def test_apply_force_overwrite(xup_home):
     _make_tool(xup_home, "vscode", '[copy_to]\n"settings.json" = "~/dest/settings.json"\n')
-    (xup_home / "repo" / "origin" / "vscode" / "settings.json").write_text("new")
+    (xup_home / "repo" / "main" / "vscode" / "settings.json").write_text("new")
     dest = Path.home() / "dest" / "settings.json"
     dest.parent.mkdir(parents=True)
     dest.write_text("old")

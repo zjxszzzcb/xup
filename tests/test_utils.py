@@ -5,7 +5,7 @@ from xup.utils.git import parse_remote_ref
 
 
 def test_tool_dir_default_namespace(xup_home):
-    assert tool_dir("vscode") == xup_home / "repo" / "origin" / "vscode"
+    assert tool_dir("vscode") == xup_home / "repo" / "main" / "vscode"
 
 
 def test_tool_dir_explicit_namespace(xup_home):

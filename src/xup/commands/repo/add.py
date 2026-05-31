@@ -7,9 +7,9 @@ from xup.utils import ensure_repo, get_repo_dir
 
 
 @click.command()
+@click.argument("name")
 @click.argument("url")
-@click.option("-n", "--name", default="origin", help="Remote name (default: origin)")
-def cmd_repo_add(url, name):
+def cmd_repo_add(name, url):
     """Add a remote or clone if repo does not exist."""
     ensure_repo()
     repo_dir = get_repo_dir()

@@ -8,7 +8,7 @@ runner = CliRunner()
 
 def test_copy_file(xup_home):
     _make_tool(xup_home, "vscode", '[copy_to]\n"a.txt" = "~/a.txt"\n')
-    (xup_home / "repo" / "origin" / "vscode" / "a.txt").write_text("hi")
+    (xup_home / "repo" / "main" / "vscode" / "a.txt").write_text("hi")
 
     result = runner.invoke(app, ["vscode"])
     assert result.exit_code == 0
@@ -32,7 +32,7 @@ def test_copy_namespace(xup_home):
 
 def test_copy_force(xup_home):
     _make_tool(xup_home, "vscode", '[copy_to]\n"a.txt" = "~/a.txt"\n')
-    (xup_home / "repo" / "origin" / "vscode" / "a.txt").write_text("new")
+    (xup_home / "repo" / "main" / "vscode" / "a.txt").write_text("new")
     (Path.home() / "a.txt").write_text("old")
 
     result = runner.invoke(app, ["vscode", "--force"])

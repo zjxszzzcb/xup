@@ -1,6 +1,6 @@
 from pathlib import Path
 
-DEFAULT_NS = "origin"
+DEFAULT_NS = "main"
 
 
 def get_repo_dir() -> Path:

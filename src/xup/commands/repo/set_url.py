@@ -14,7 +14,7 @@ def cmd_repo_set_url(name_or_url, url):
     ensure_git_repo()
 
     if url is None:
-        name, url = "origin", name_or_url
+        name, url = "main", name_or_url
     else:
         name = name_or_url
 

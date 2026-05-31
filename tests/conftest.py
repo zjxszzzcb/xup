@@ -6,7 +6,7 @@ from xup.cli import app
 runner = CliRunner()
 
 
-def _make_tool(xup_home, tool: str, setup_text: str, ns: str = "origin"):
+def _make_tool(xup_home, tool: str, setup_text: str, ns: str = "main"):
     """Create a minimal tool with setup.toml under xup_home."""
     p = xup_home / "repo" / ns / tool
     p.mkdir(parents=True)

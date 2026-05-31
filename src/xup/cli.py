@@ -24,7 +24,7 @@ class FallbackGroup(click.Group):
     invoke_without_command=False,
     context_settings={"help_option_names": ["-h", "--help"]},
 )
-@click.version_option("0.1.0", "-v", "--version", prog_name="xup", message="%(prog)s %(version)s")
+@click.version_option("0.1.1", "-v", "--version", prog_name="xup", message="%(prog)s %(version)s")
 def app():
     """Setup tool
 
